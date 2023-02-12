@@ -1,0 +1,1 @@
+This is my Ruby Event Manager project for The Odin Project.
