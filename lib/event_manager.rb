@@ -8,8 +8,9 @@ def clean_zipcode(zipcode)
 end
 
 def clean_phone_number(homephone)
+  # use gsub to remove non-digits from number
   extract_numbers = homephone.gsub(/\D/, '')
-  
+  # check to make sure number matches all conditions
   if (extract_numbers.length == 11) && (extract_numbers.start_with? "1")
     extract_numbers[1..-1]
   elsif extract_numbers.length == 10
@@ -20,9 +21,11 @@ def clean_phone_number(homephone)
 end
 
 def count(list)
+  # create a hash
   counts = Hash.new(0)
+  # count how many times a number appears
   list.each { |num| counts[num] += 1 }
-
+  # display text with relevant numbers
   counts.each do |k,v|
     if v == 1
       puts "#{v} person registered at #{k}"
@@ -30,6 +33,14 @@ def count(list)
       puts "#{v} people registered at #{k}"
     end
   end
+end
+
+
+def what_day(days)
+  weekdays = { 0 => "Sunday", 1 => "Monday", 2 => "Tuesday", 3 => "Wednesday", 4 => "Thursday", 5 => "Friday", 6 => "Saturday" }
+  # count how many days appear the most and display a message
+  day_of_week = days.max_by { |day| days.count(day)}
+  puts "\nThe most common registration day is: #{weekdays[day_of_week]}."
 end
 
 def legislators_by_zipcode(zip)
@@ -68,6 +79,7 @@ contents = CSV.open(
 template_letter = File.read('form_letter.erb')
 erb_template = ERB.new template_letter
 regtime = []
+regday = []
 contents.each do |row|
   id = row[0]
   name = row[:first_name]
@@ -75,7 +87,10 @@ contents.each do |row|
   zipcode = clean_zipcode(row[:zipcode])
   legislators = legislators_by_zipcode(zipcode)
   regdate = row[:regdate]
+  # push the hour from a date and time array to an empty array
   regtime.push(DateTime.strptime(regdate, "%m/%d/%y %k:%M").strftime("%k" + ":00 hrs"))
+  # push the day from a date array to an empty array
+  regday.push(DateTime.strptime(regdate, "%m/%d/%y").wday)
 
   form_letter = erb_template.result(binding)
 
@@ -86,3 +101,4 @@ end
 
 puts "\nRegistration times: "
 count(regtime)
+what_day(regday)
