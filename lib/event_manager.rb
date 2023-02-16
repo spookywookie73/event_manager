@@ -1,6 +1,7 @@
 require 'csv'
 require 'google/apis/civicinfo_v2'
 require 'erb'
+require 'date'
 
 def clean_zipcode(zipcode)
   zipcode.to_s.rjust(5, '0')[0..4]
@@ -15,6 +16,19 @@ def clean_phone_number(homephone)
     extract_numbers
   else
     "- Not a valid Phone Number -"
+  end
+end
+
+def count(list)
+  counts = Hash.new(0)
+  list.each { |num| counts[num] += 1 }
+
+  counts.each do |k,v|
+    if v == 1
+      puts "#{v} person registered at #{k}"
+    else
+      puts "#{v} people registered at #{k}"
+    end
   end
 end
 
@@ -53,15 +67,22 @@ contents = CSV.open(
 
 template_letter = File.read('form_letter.erb')
 erb_template = ERB.new template_letter
-
+regtime = []
 contents.each do |row|
   id = row[0]
   name = row[:first_name]
   homephone = clean_phone_number(row[:homephone])
   zipcode = clean_zipcode(row[:zipcode])
   legislators = legislators_by_zipcode(zipcode)
+  regdate = row[:regdate]
+  regtime.push(DateTime.strptime(regdate, "%m/%d/%y %k:%M").strftime("%k" + ":00 hrs"))
 
   form_letter = erb_template.result(binding)
 
   save_thank_you_letter(id, form_letter)
+
+  puts "#{name} - phone number: #{homephone}"
 end
+
+puts "\nRegistration times: "
+count(regtime)
